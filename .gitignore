@@ -1,0 +1,4 @@
+/bin
+/obj
+*.sln
+post-build-copy.csproj
