@@ -12,7 +12,7 @@ namespace Indra.Server.Dtos {
     private readonly Type _modelType;
 
     public string Id { get; }
-    //public Place Location { get; }
+    public Place Location { get; }
     public IEnumerable<string> RequiredPermissions { get; }
 
     public override Type ModelType 

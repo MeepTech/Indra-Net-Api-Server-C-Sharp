@@ -1,12 +1,17 @@
 using Indra.Data;
 using Meep.Tech.Data;
 using Meep.Tech.Data.Configuration;
+using Meep.Tech.Data.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -22,15 +27,10 @@ namespace Indra.Server {
 
     // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services) {
-      // Data
-      Loader loader = new(new (){
-        PreLoadAssemblies = new List<Assembly> {
-          typeof(Place).Assembly
-        }
-      });
-      Universe universe = new(loader, "Indra.Net");
-      loader.Initialize();
+      // XBam
+      _initXbam();
 
+      // Cookies
       services.ConfigureApplicationCookie(options => {
         // Cookie settings
         options.Cookie.HttpOnly = true;
@@ -42,10 +42,25 @@ namespace Indra.Server {
       });
 
       // API
-      services.AddControllers();
-      services.AddSwaggerGen(c 
+      services.AddControllers()
+        .AddNewtonsoftJson();
+
+      // Swagger
+      services.AddSwaggerGen(c
         => c.SwaggerDoc("v1", new OpenApiInfo { Title = "Indra.Server", Version = "v1" }));
       services.AddSwaggerGenNewtonsoftSupport();
+    }
+
+    static void _initXbam() {
+      Loader loader = new(new() {
+        PreLoadAssemblies = new List<Assembly> {
+          typeof(Place).Assembly
+        }
+      });
+      Universe universe = new(loader, "Indra.Net");
+      universe.SetExtraContext(new ModPorterContext(universe, AppDomain.CurrentDomain.BaseDirectory));
+      loader.Initialize();
+      JsonConvert.DefaultSettings = () => loader.Options.ModelSerializerOptions.JsonSerializerSettings;
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

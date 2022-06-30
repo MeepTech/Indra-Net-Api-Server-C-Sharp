@@ -19,7 +19,13 @@ namespace Indra.Server.Controllers {
   [ApiController]
   public class ModelsController : ControllerBase {
 
-    public ModelsController() {}
+    public User TestUser {
+      get;
+    }
+
+    public ModelsController() {
+      TestUser = Models<User>.Factory.Make((nameof(Data.User.UniqueName), "Test"), (nameof(Data.User.PasswordHash), "###" ));  
+    }
 
     // GET: api/models/world
     [HttpGet("{modelType}")]
@@ -27,7 +33,7 @@ namespace Indra.Server.Controllers {
       => throw new NotImplementedException();
 
     // GET: api/models/world/5
-    [HttpPost("{modelType}/{id}")]
+    [HttpGet("{modelType}/{id}")]
     [ProducesResponseType(typeof(IDictionary<string, SuccessDto<ModelDataView>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(FailureDto), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(FailureDto), StatusCodes.Status404NotFound)]
@@ -159,8 +165,12 @@ namespace Indra.Server.Controllers {
     public ActionResult<Dto> Parse(string modelType, [FromBody] JObject creationData)
       => throw new NotImplementedException();
 
+    /// <summary>
+    /// TODO: replace this with actual login logic.
+    /// </summary>
     bool _checkIsLoggedIn(string userAuthenticationKey, out User currentUser) {
-      throw new NotImplementedException();
+      currentUser = TestUser;
+      return true;
     }
   }
 }
