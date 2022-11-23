@@ -1,22 +1,14 @@
-using Indra.Data;
-using Meep.Tech.Data;
-using Meep.Tech.Data.Configuration;
-using Meep.Tech.Data.IO;
+using Indra.Api.Configuration;
+using Indra.Net.Focuses.Actors;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 
-namespace Indra.Server {
+namespace Indra.Api {
   public class Startup {
 
     public Startup(IConfiguration configuration, IWebHostEnvironment env) {
@@ -27,17 +19,14 @@ namespace Indra.Server {
 
     // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services) {
-      // XBam
-      _initXbam();
-
       // Cookies
       services.ConfigureApplicationCookie(options => {
         // Cookie settings
         options.Cookie.HttpOnly = true;
         options.ExpireTimeSpan = TimeSpan.FromDays(5);
 
-        options.LoginPath = "/api/user/login";
-        options.AccessDeniedPath = "/";
+        options.LoginPath = "/login";
+        options.AccessDeniedPath = "/denied";
         options.SlidingExpiration = true;
       });
 
@@ -51,20 +40,8 @@ namespace Indra.Server {
       services.AddSwaggerGenNewtonsoftSupport();
     }
 
-    static void _initXbam() {
-      Loader loader = new(new() {
-        PreLoadAssemblies = new List<Assembly> {
-          typeof(Place).Assembly
-        }
-      });
-      Universe universe = new(loader, "Indra.Net");
-      universe.SetExtraContext(new ModPorterContext(universe, AppDomain.CurrentDomain.BaseDirectory));
-      loader.Initialize();
-      JsonConvert.DefaultSettings = () => loader.Options.ModelSerializerOptions.JsonSerializerSettings;
-    }
-
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DbContext dbContext) {
       if (env.IsDevelopment()) {
         app.UseDeveloperExceptionPage();
         app.UseSwagger();
@@ -82,6 +59,8 @@ namespace Indra.Server {
       app.UseEndpoints(endpoints => {
         endpoints.MapControllers();
       });
+
+      Server.Initialize("Test-Server-A", "localhost:8080", dbContext);
     }
   }
 }
